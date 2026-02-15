@@ -3,7 +3,6 @@
 #include <znc/IRCNetwork.h>
 
 using std::map;
-using std::pair;
 using std::vector;
 
 #include <netinet/in.h>
@@ -259,6 +258,16 @@ char *decrypts(char *key, char *str)
   return result;
 }
 
+// Key exchange state: time, private key, CBC mode flag
+struct SKeyExchangeState {
+  time_t timestamp;
+  CString privkey;
+  bool cbc_mode;
+
+  SKeyExchangeState(time_t t, const CString& priv, bool cbc = true)
+      : timestamp(t), privkey(priv), cbc_mode(cbc) {}
+};
+
 class CKeyExchangeTimer : public CTimer
 {
 public:
@@ -298,12 +307,20 @@ public:
   {
     CString command = sMessage.Token(0);
     CString sOtherPub_Key = sMessage.Token(1);
+    CString sRemaining = sMessage.Token(2, true);
 
-    if (command.Equals("DH1080_INIT") && !sOtherPub_Key.empty())
+    // Check for DH1080_INIT or DH1080_INIT_CBC
+    bool is_cbc_init = command.Equals("DH1080_INIT_CBC");
+    bool is_init = command.Equals("DH1080_INIT") || is_cbc_init;
+
+    if (is_init && !sOtherPub_Key.empty())
     {
       CString sPriv_Key;
       CString sPub_Key;
       CString sSecretKey;
+
+      // Detect CBC mode from command or from " CBC" suffix in message
+      bool use_cbc = is_cbc_init || sRemaining.Contains("CBC");
 
       DH1080_gen(sPriv_Key, sPub_Key);
       if (!DH1080_comp(sPriv_Key, sOtherPub_Key, sSecretKey))
@@ -312,7 +329,10 @@ public:
         return CONTINUE;
       }
       PutModule("Received DH1080 public key from " + Nick.GetNick() + ", sending mine...");
-      PutIRC("NOTICE " + Nick.GetNick() + " :DH1080_FINISH " + sPub_Key);
+      // Respond with DH1080_FINISH and CBC suffix if CBC mode was detected
+      CString response = "DH1080_FINISH " + sPub_Key;
+      if (use_cbc) response += " CBC";
+      PutIRC("NOTICE " + Nick.GetNick() + " :" + response);
       SetNV("key " + Nick.GetNick().AsLower(), sSecretKey);
       PutModule("Key for " + Nick.GetNick() + " successfully set.");
       return HALT;
@@ -322,14 +342,14 @@ public:
       CString sPriv_Key;
       CString sSecretKey;
 
-      map<CString, pair<time_t, CString>>::iterator it = m_msKeyExchange.find(Nick.GetNick().AsLower());
+      map<CString, SKeyExchangeState>::iterator it = m_msKeyExchange.find(Nick.GetNick().AsLower());
       if (it == m_msKeyExchange.end())
       {
         PutModule("Received unexpected DH1080_FINISH from " + Nick.GetNick() + ".");
       }
       else
       {
-        sPriv_Key = it->second.second;
+        sPriv_Key = it->second.privkey;
         if (DH1080_comp(sPriv_Key, sOtherPub_Key, sSecretKey))
         {
           SetNV("key " + Nick.GetNick().AsLower(), sSecretKey);
@@ -721,7 +741,7 @@ public:
       }
       else
       {
-        map<CString, pair<time_t, CString>>::iterator it = m_msKeyExchange.find(sTarget.AsLower());
+        map<CString, SKeyExchangeState>::iterator it = m_msKeyExchange.find(sTarget.AsLower());
         if (it != m_msKeyExchange.end())
         {
           PutModule("Keyexchange with " + sTarget + " already in progress.");
@@ -732,9 +752,10 @@ public:
           CString sPub_Key;
 
           DH1080_gen(sPriv_Key, sPub_Key);
-          m_msKeyExchange.insert(make_pair(sTarget.AsLower(), make_pair(time(NULL), sPriv_Key)));
-          PutIRC("NOTICE " + sTarget + " :DH1080_INIT " + sPub_Key);
-          PutModule("Sent my DH1080 public key to " + sTarget + ", waiting for reply ...");
+          // Prioritize CBC mode: send DH1080_INIT_CBC with CBC suffix
+          m_msKeyExchange.insert(make_pair(sTarget.AsLower(), SKeyExchangeState(time(NULL), sPriv_Key, true)));
+          PutIRC("NOTICE " + sTarget + " :DH1080_INIT_CBC " + sPub_Key + " CBC");
+          PutModule("Sent my DH1080 public key to " + sTarget + " (CBC mode), waiting for reply ...");
           if (FindTimer("KeyExchangeTimer") == NULL)
           {
             AddTimer(new CKeyExchangeTimer(this));
@@ -809,13 +830,18 @@ public:
 
   void DelStaleKeyExchanges(time_t iTime)
   {
-    for (map<CString, pair<time_t, CString>>::const_iterator it = m_msKeyExchange.begin(); it != m_msKeyExchange.end(); it++)
+    vector<CString> to_remove;
+    for (map<CString, SKeyExchangeState>::iterator it = m_msKeyExchange.begin(); it != m_msKeyExchange.end(); ++it)
     {
-      if (iTime - 5 >= it->second.first)
+      if (iTime - 5 >= it->second.timestamp)
       {
         PutModule("Keyexchange with " + it->first + " expired before completion.");
-        m_msKeyExchange.erase(it->first);
+        to_remove.push_back(it->first);
       }
+    }
+    for (size_t i = 0; i < to_remove.size(); i++)
+    {
+      m_msKeyExchange.erase(to_remove[i]);
     }
     if (m_msKeyExchange.size() <= 0)
     {
@@ -950,7 +976,7 @@ private:
     return true;
   }
 
-  map<CString, pair<time_t, CString>> m_msKeyExchange;
+  map<CString, SKeyExchangeState> m_msKeyExchange;
 };
 
 void CKeyExchangeTimer::RunJob()
