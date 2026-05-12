@@ -31,14 +31,13 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   target_compile_options(fish PRIVATE -Wno-deprecated-declarations)
 endif()
 
-# Allow unresolved symbols in the module to be resolved by ZNC at load time (GNU ld)
+# Allow unresolved symbols in the module to be resolved by ZNC at load time
 if(UNIX AND NOT APPLE)
-  include(CheckLinkerFlag)
-  set(_allow_flag "-Wl,--unresolved-symbols=ignore-in-shared-libs")
-  check_linker_flag(CXX "${_allow_flag}" HAS_IGNORE_UNRESOLVED)
-  if(HAS_IGNORE_UNRESOLVED)
-    target_link_options(fish PRIVATE ${_allow_flag})
-  endif()
+  target_link_options(fish PRIVATE
+    -Wl,--unresolved-symbols=ignore-in-shared-libs
+    -Wl,--allow-shlib-undefined
+    -Wl,-z,undefs
+  )
 endif()
 
 # Common defines

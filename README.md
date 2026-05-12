@@ -2,135 +2,142 @@
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![ZNC Version](https://img.shields.io/badge/ZNC-1.11.x-green.svg)](https://znc.in/)
-[![OpenSSL](https://img.shields.io/badge/OpenSSL-3-red.svg)](https://www.openssl.org/)
+[![OpenSSL](https://img.shields.io/badge/OpenSSL-3%2F4-red.svg)](https://www.openssl.org/)
 
-## 📋 Description
+## Description
 
-Module de chiffrement FiSH pour ZNC, offrant une protection cryptographique des communications IRC via les modes ECB et CBC avec support complet d'OpenSSL 3 et de l'échange de clés DH1080.
+FiSH encryption module for ZNC, providing cryptographic protection for IRC communications via ECB and CBC modes with full OpenSSL 3/4 support and DH1080 key exchange.
 
-### Avantages
+### Benefits
 
-- ✅ **Sécurité renforcée** : Chiffrement bout-en-bout des messages IRC (canaux et messages privés)
-- ✅ **Compatibilité étendue** : Support ECB (clients legacy) et CBC (standard moderne)
-- ✅ **Échange automatique** : Protocol DH1080 pour négociation sécurisée des clés
-- ✅ **OpenSSL 3** : Compatible avec les dernières versions de ZNC 1.11.x et OpenSSL 3
-- ✅ **Flexibilité** : Configuration par canal, par utilisateur, chiffrement des topics
-- ✅ **Interopérabilité** : Compatible avec FiSH/irssi et mIRC FiSH10
+- ✅ **Enhanced security** : End-to-end encryption of IRC messages (channels and private messages)
+- ✅ **Broad compatibility** : ECB (legacy clients) and CBC (modern standard) support
+- ✅ **Automatic exchange** : DH1080 protocol for secure key negotiation
+- ✅ **OpenSSL 3 & 4 / LibreSSL** : Works with ZNC 1.11.x, OpenSSL 1.1.1+, 3.x, 4.x, and LibreSSL 3.x+
+- ✅ **Flexibility** : Per-channel, per-user configuration, topic encryption
+- ✅ **Interoperability** : Compatible with WeeChat FiSH, FiSH-irssi, mIRC FiSH10 — wire-compatible ECB, CBC, and DH1080
 
 ---
 
-## 📦 Installation
+## Installation
 
-### Prérequis
+### Prerequisites
 
-- **ZNC** version 1.11.x ou supérieure
-- **OpenSSL** version 3.x
-- **CMake** version 3.1 ou supérieure
-- Compilateur C++ avec support C++11
+- **ZNC** version 1.11.x or later
+- **OpenSSL** version 3.x or 4.x
+- **CMake** version 3.15 or later
+- C++ compiler with C++17 support
 
-### Étapes d'installation
+### Installation steps
 
-1. **Cloner le dépôt**
+1. **Clone the repository**
    ```bash
    git clone https://github.com/ZarTek-Creole/znc-fish.git
    cd znc-fish
    ```
 
-2. **Compiler le module**
+2. **Build the module**
+
+   Using **CMake** (recommended):
    ```bash
    mkdir build && cd build
    cmake ..
    make
    ```
 
-3. **Installer le module**
+   Using **znc-buildmod** (quick alternative):
+   ```bash
+   znc-buildmod fish.cpp
+   ```
+
+3. **Install the module**
    ```bash
    make install
    ```
-   Ou copier manuellement `fish.so` dans `~/.znc/modules/`
+   Or manually copy `fish.so` to `~/.znc/modules/`
 
-4. **Charger le module dans ZNC**
+4. **Load the module in ZNC**
    ```irc
    /msg *status LoadMod fish
    ```
 
-5. **Redémarrer ZNC** après remplacement du module pour décharger toute version précédente.
+5. **Restart ZNC** after replacing the module to unload any previous version.
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
-### Configuration de base
+### Basic configuration
 
-#### Définir une clé de chiffrement
+#### Setting an encryption key
 
-- **Mode CBC (par défaut, recommandé)** :
+- **CBC mode (default, recommended)** :
   ```irc
-  /msg *fish SetKey #canal CBC:maClèSecrète
+  /msg *fish SetKey #channel CBC:mySecretKey
   ```
 
-- **Mode ECB (pour clients legacy)** :
+- **ECB mode (for legacy clients)** :
   ```irc
-  /msg *fish SetKey pseudo ECB:cléLegacy
+  /msg *fish SetKey nick ECB:legacyKey
   ```
 
-#### Gestion des clés
+#### Key management
 
-- **Lister les clés** :
+- **List keys** :
   ```irc
   /msg *fish ListKeys
   ```
-  Ajouter `full` pour afficher les clés complètes : `/msg *fish ListKeys full`
+  Add `full` to display complete keys: `/msg *fish ListKeys full`
 
-- **Afficher une clé spécifique** :
+- **Show a specific key** :
   ```irc
-  /msg *fish ShowKey #canal
-  /msg *fish ShowKey pseudo
+  /msg *fish ShowKey #channel
+  /msg *fish ShowKey nick
   ```
 
-- **Supprimer une clé** :
+- **Delete a key** :
   ```irc
-  /msg *fish DelKey #canal
+  /msg *fish DelKey #channel
   ```
 
-- **Copier une clé** :
+- **Copy a key** :
   ```irc
   /msg *fish SetKeyFrom <destination> <source>
   ```
 
-### Échange de clés DH1080
+### DH1080 key exchange
 
-Le protocole DH1080 permet l'échange sécurisé de clés sans transmission directe.
+The DH1080 protocol enables secure key exchange without direct transmission.
 
-- **Avec un utilisateur** :
+- **With a user** :
   ```irc
-  /msg *fish KeyX pseudo [ecb|cbc]
+  /msg *fish KeyX nick [ecb|cbc]
   ```
 
-- **Avec un utilisateur pour un canal** :
+- **With a user for a channel** :
   ```irc
-  /msg *fish KeyXChan #canal pseudo [ecb|cbc]
+  /msg *fish KeyXChan #channel nick [ecb|cbc]
   ```
 
-- **Diffusion à tous les utilisateurs d'un canal** :
+- **Broadcast to all channel users** :
   ```irc
-  /msg *fish KeyXChanAll #canal [ecb|cbc]
+  /msg *fish KeyXChanAll #channel [ecb|cbc]
   ```
 
-- **Échange automatique** (au premier MP sans clé) :
+- **Automatic exchange** (on first PM without a key) :
   ```irc
   /msg *fish AutoKeyX on|off
   ```
 
-Le module accepte `DH1080_INIT` et `DH1080_INIT_CBC`, et envoie/accepte les clés publiques FiSH10 avec suffixe `A`.
+The module accepts `DH1080_INIT` and `DH1080_INIT_CBC`, and sends/accepts FiSH10 public keys with `A` suffix.
 
-### Options avancées
+### Advanced options
 
-#### Chiffrement des topics
+#### Topic encryption
 
-- **Par canal** :
+- **Per channel** :
   ```irc
-  /msg *fish EncryptTopic #canal on|off|status
+  /msg *fish EncryptTopic #channel on|off|status
   ```
 
 - **Global** :
@@ -138,214 +145,224 @@ Le module accepte `DH1080_INIT` et `DH1080_INIT_CBC`, et envoie/accepte les clé
   /msg *fish EncryptGlobalTopic on|off|status
   ```
 
-#### Désactiver le chiffrement pour une cible
+#### Disable encryption for a target
 
 ```irc
-/msg *fish DisableTarget <#canal|pseudo> on|off
+/msg *fish DisableTarget <#channel|nick> on|off
 ```
 
-#### Préfixe texte clair
+#### Cleartext prefix
 
-Pour envoyer un message en clair malgré une clé active, commencer par `` ou configurer :
+To send a message in cleartext despite an active key, prepend `-e` (built-in) or configure a custom prefix:
 ```irc
-/msg *fish PlainPrefix <préfixe>
+/msg *fish PlainPrefix <prefix>
+/msg *fish PlainPrefix off
 ```
 
-#### Traitement des messages
+#### Message processing
 
-- **Messages entrants/sortants** :
+- **Incoming/Outgoing messages** :
   ```irc
   /msg *fish ProcessIncoming on|off
   /msg *fish ProcessOutgoing on|off
   ```
 
-- **Notices et actions** :
+- **Notices and actions** :
   ```irc
   /msg *fish EncryptNotice on|off
   /msg *fish EncryptAction on|off
   ```
 
-#### Marquage des messages (local uniquement)
+#### Message marking (local only)
 
-- **Marquer les messages déchiffrés** :
+- **Mark decrypted messages** :
   ```irc
   /msg *fish MarkIncoming on|off
-  /msg *fish MarkIncomingTarget <cible> on|off
+  /msg *fish MarkIncomingTarget <target> on|off
   ```
 
-- **Position du marqueur** :
+- **Marker position** :
   ```irc
   /msg *fish MarkPos prefix|suffix
   ```
 
-- **Texte du marqueur** :
+- **Marker text** :
   ```irc
-  /msg *fish MarkStr dec|enc|plain <texte>
+  /msg *fish MarkStr dec|enc|plain <text>
   ```
 
-- **Marquer les messages corrompus** :
+- **Mark corrupted messages** :
   ```irc
   /msg *fish MarkBroken on|off
   ```
 
 ---
 
-## 🚀 Usage
+## Usage
 
-### Démarrage rapide
+### Quick start
 
-1. **Configurer une clé pour un canal** :
+1. **Set a key for a channel** :
    ```irc
-   /msg *fish SetKey #moncanal CBC:superSecret123
+   /msg *fish SetKey #mychannel CBC:superSecret123
    ```
 
-2. **Rejoindre le canal et communiquer** :
-   - Tous les messages seront automatiquement chiffrés/déchiffrés
-   - Les autres utilisateurs doivent avoir la même clé
+2. **Join the channel and communicate** :
+   - All messages will be automatically encrypted/decrypted
+   - Other users must have the same key
 
-3. **Vérifier la configuration** :
+3. **Verify configuration** :
    ```irc
    /msg *fish ListKeys
    ```
 
-### Modes de chiffrement
+### Encryption modes
 
-#### CBC (Cipher Block Chaining) - Recommandé
+#### CBC (Cipher Block Chaining) - Recommended
 
-- Format : `+OK *<base64>` (IV + texte chiffré, base64 MIME standard)
-- Plus sécurisé, standard moderne
-- Chaque message a un vecteur d'initialisation unique
+- Format: `+OK *<base64>` (IV + ciphertext, MIME standard base64)
+- More secure, modern standard
+- Each message has a unique initialization vector
 
 #### ECB (Electronic Codebook) - Legacy
 
-- Format : `+OK <fish64>` ou `mcps <fish64>` (base64 FiSH `./0-9a-zA-Z` en blocs de 12 caractères)
-- Compatible avec anciens clients FiSH
-- Moins sécurisé mais nécessaire pour l'interopérabilité
+- Format: `+OK <fish64>` or `mcps <fish64>` (FiSH base64 `./0-9a-zA-Z` in 12-character blocks)
+- Compatible with older FiSH clients
+- Less secure but necessary for interoperability
 
-### Détection et compatibilité
+### Detection and compatibility
 
-- **Fallback automatique** : Le module essaie d'abord le mode configuré, puis l'autre mode si échec
-- **Apprentissage automatique** : Le mode stocké peut être mis à jour lors d'un déchiffrement réussi (sauf si désactivé)
-- **Changement de mode** :
+- **Automatic fallback**: The module tries the configured mode first, then the other mode on failure
+- **Automatic learning**: The stored mode can be updated upon successful decryption (unless disabled)
+- **Mode switching**:
   ```irc
-  /msg *fish SetMode <cible> ecb|cbc
-  /msg *fish GetMode <cible>
+  /msg *fish SetMode <target> ecb|cbc
+  /msg *fish GetMode <target>
   ```
 
-### Stockage des clés
+### Key storage
 
-Les clés sont stockées dans ZNC NV avec le format :
-- `CBC:<clé>` ou `ECB:<clé>`
-- Par défaut CBC si aucun préfixe
+Keys are stored in ZNC NV with the format:
+- `CBC:<key>` or `ECB:<key>`
+- Defaults to ECB if no prefix
+- Values are AES-256-CBC encrypted on disk using the ZNC user password
 
-### Tests et diagnostics
+### Tests and diagnostics
 
-#### Tests locaux (roundtrip)
+#### Local tests (roundtrip)
 
 ```irc
-/msg *fish SelfTest ecb MaClé bonjour
-/msg *fish SelfTest cbc MaClé bonjour
+/msg *fish SelfTest ecb MyKey hello
+/msg *fish SelfTest cbc MyKey hello
 ```
 
-Ces commandes chiffrent puis déchiffrent le texte pour vérifier le bon fonctionnement.
+These commands encrypt then decrypt the text to verify correct operation.
 
-#### Tests d'interopérabilité
+#### Interoperability tests
 
-Pour tester avec FiSH/irssi ou mIRC FiSH10 :
+To test with FiSH/irssi or mIRC FiSH10:
 
-1. **Messages privés** :
-   - Chaque côté : `/msg *fish KeyX <pseudo>`
-   - Envoyer un message court comme `!df`
+1. **Private messages**:
+   - Each side: `/msg *fish KeyX <nick>`
+   - Send a short message like `!df`
 
-2. **Canal** :
-   - Définir la même clé CBC sur tous les clients
-   - Vérifier que les messages `+OK *...` sont déchiffrés correctement
+2. **Channel**:
+   - Set the same CBC key on all clients
+   - Verify that `+OK *...` messages are decrypted correctly
 
 ---
 
-## 📚 Référence des commandes
+## Command reference
 
-### Gestion des clés
+### Key management
 
-- `SetKey <#canal|Pseudo> [CBC:|ECB:]<clé>` — Définir une clé
-- `DelKey <#canal|Pseudo>` — Supprimer une clé
-- `ShowKey <#canal|Pseudo>` — Afficher une clé
-- `ListKeys [full]` — Lister toutes les clés
-- `SetKeyFrom <dest> <source>` — Copier une clé
-- `SetMode <cible> ecb|cbc` — Définir le mode
-- `GetMode <cible>` — Obtenir le mode actuel
+- `SetKey <#channel|Nick> [CBC:|ECB:]<key>` — Set a key
+- `DelKey <#channel|Nick>` — Delete a key
+- `ShowKey <#channel|Nick>` — Show a key
+- `ListKeys [full]` — List all keys
+- `SetKeyFrom <dest> <source>` — Copy a key
+- `SetMode <target> ecb|cbc` — Set the mode
+- `GetMode <target>` — Get the current mode
 
-### Échange de clés
+### Key exchange
 
-- `KeyX <pseudo> [ecb|cbc]` — Échanger une clé avec un utilisateur
-- `KeyXChan <#canal> <pseudo> [ecb|cbc]` — Échanger pour un canal
-- `KeyXChanAll <#canal> [ecb|cbc]` — Diffuser à tous les utilisateurs
-- `AutoKeyX on|off` — Échange automatique au premier MP
+- `KeyX <nick> [ecb|cbc]` — Exchange a key with a user
+- `KeyXChan <#channel> <nick> [ecb|cbc]` — Exchange for a channel
+- `KeyXChanAll <#channel> [ecb|cbc]` — Broadcast to all users
+- `AutoKeyX on|off` — Automatic exchange on first PM
 
-### Traitement des messages
+### Message processing
 
-- `ProcessIncoming on|off` — Traiter les messages entrants
-- `ProcessOutgoing on|off` — Traiter les messages sortants
-- `EncryptNotice on|off` — Chiffrer les notices
-- `EncryptAction on|off` — Chiffrer les actions (/me)
+- `ProcessIncoming on|off` — Process incoming messages
+- `ProcessOutgoing on|off` — Process outgoing messages
+- `EncryptNotice on|off` — Encrypt notices
+- `EncryptAction on|off` — Encrypt actions (/me)
 
 ### Topics
 
-- `EncryptTopic <#canal> on|off|status` — Chiffrer le topic d'un canal
-- `EncryptGlobalTopic on|off|status` — Paramètre global pour tous les canaux
+- `EncryptTopic <#channel> on|off|status` — Encrypt a channel's topic
+- `EncryptGlobalTopic on|off|status` — Global setting for all channels
 
-### Marquage (local)
+### Marking (local)
 
-- `MarkIncoming on|off` — Marquer les messages déchiffrés
-- `MarkIncomingTarget <cible> on|off` — Par cible
-- `MarkPos prefix|suffix` — Position du marqueur
-- `MarkStr dec|enc|plain <texte>` — Texte du marqueur
-- `MarkBroken on|off` — Marquer les messages corrompus (ajouter `&` pour blocs FiSH tronqués)
+- `MarkIncoming on|off` — Mark decrypted messages
+- `MarkIncomingTarget <target> on|off` — Per target
+- `MarkPos prefix|suffix` — Marker position
+- `MarkStr dec|enc|plain <text>` — Marker text
+- `MarkBroken on|off` — Mark corrupted messages (adds `&` for truncated FiSH blocks)
 
-### Utilitaires
+### Utilities
 
-- `PlainPrefix <préfixe>` — Définir un préfixe pour texte clair (`` par défaut)
-- `DisableTarget <#canal|pseudo> on|off` — Désactiver le chiffrement pour une cible
-- `SelfTest <ecb|cbc> <clé> <texte>` — Test de chiffrement roundtrip
-
----
-
-## 📄 Licence
-
-Ce projet est distribué sous licence **Apache License 2.0**. Consultez le fichier [LICENSE](LICENSE) pour plus de détails.
-
-### Implémentation technique
-
-- L'implémentation ECB respecte le comportement FiSH (clé brute via `BF_set_key(strlen(key), key)` et encodage base64 FiSH)
-- Les avertissements de dépréciation OpenSSL 3 sont supprimés dans le code via des pragmas GCC
+- `PlainPrefix <prefix|off>` — Set a custom prefix to skip encryption (built-in `-e` always works)
+- `DisableTarget <#channel|nick> on|off` — Disable encryption for a target
+- `SelfTest <ecb|cbc> <key> <text>` — Roundtrip encryption test
+- `SetConfig <name> [value]` — Set a config option
+- `ListConfig` — List all config options
+- `Help` — Show this help (auto-generated from registered commands)
+- `Version` — Show module version
 
 ---
 
-## 🔗 Liens utiles
+## License
 
-- [Documentation ZNC](https://wiki.znc.in/)
+This project is distributed under the **Apache License 2.0**. See the [LICENSE](LICENSE) file for details.
+
+### Technical implementation
+
+- Blowfish ECB with FiSH custom base64, CBC with standard base64 (Mircryption-compatible)
+- DH1080 key exchange using the same 1080-bit Sophie Germain prime, generator g=2, and SHA-256 secret derivation as all FiSH variants
+- OpenSSL 3/4 deprecation warnings are suppressed in code via GCC pragmas; LibreSSL is also supported
+- Wire-protocol compatible with WeeChat fish.py, FiSH-irssi, and mIRC FiSH10 (verified against reference implementations)
+
+---
+
+## Useful links
+
+- [ZNC Documentation](https://wiki.znc.in/)
 - [OpenSSL Documentation](https://www.openssl.org/docs/)
-- [FiSH Protocol Specification](https://github.com/flakes/mirc_fish_10)
-- [Code de Conduite](CODE_OF_CONDUCT.md)
-- [Guide de Contribution](CONTRIBUTING.md)
-- [Politique de Sécurité](SECURITY.md)
-- [Journal des Modifications](CHANGELOG.md)
+- [FiSH Protocol References](https://github.com/falsovsky/FiSH-irssi)
+- [WeeChat FiSH](https://github.com/freshprince/weechat-fish)
+- [mIRC FiSH10](https://github.com/flakes/mirc_fish_10)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Contribution Guide](CONTRIBUTING.md)
+- [Security Policy](SECURITY.md)
+- [Changelog](CHANGELOG.md)
 
 ---
 
-## 💬 Contact & Support
+## Contact & Support
 
-- **Auteur** : [ZarTek-Creole](https://github.com/ZarTek-Creole)
-- **Issues** : [Signaler un bug ou demander une fonctionnalité](https://github.com/ZarTek-Creole/znc-fish/issues)
-- **Discussions** : [Participer aux discussions](https://github.com/ZarTek-Creole/znc-fish/discussions)
-- **Pull Requests** : Les contributions sont les bienvenues ! Consultez [CONTRIBUTING.md](CONTRIBUTING.md)
-
----
-
-## 🙏 Remerciements
-
-Merci à tous les contributeurs et à la communauté ZNC pour leur support continu.
+- **Author**: [ZarTek-Creole](https://github.com/ZarTek-Creole)
+- **Issues**: [Report a bug or request a feature](https://github.com/ZarTek-Creole/znc-fish/issues)
+- **Discussions**: [Join the discussions](https://github.com/ZarTek-Creole/znc-fish/discussions)
+- **Pull Requests**: Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ---
 
-**Note** : Redémarrez ZNC après l'installation ou la mise à jour du module pour garantir le chargement de la version la plus récente.
+## Acknowledgements
+
+Thanks to all contributors and the ZNC community for their ongoing support.
+
+---
+
+**Note**: Restart ZNC after installing or updating the module to ensure the latest version is loaded.

@@ -3,7 +3,7 @@
 Thanks for your interest in contributing!
 
 ## Development setup
-- Linux with ZNC 1.11.x and OpenSSL 3.x
+- Linux with ZNC 1.11.x and OpenSSL 3.x or 4.x
 - Packages: `znc-dev libssl-dev libicu-dev pkg-config cmake g++ make`
 - Build: `znc-buildmod fish.cpp`
 
