@@ -35,10 +35,10 @@ using std::make_pair;
 using std::vector;
 
 #define DEBUG_FISH(fmt, ...) DEBUG("FiSH: " << fmt, ##__VA_ARGS__)
-#define MODVERSION "1.2.0"
+#define MODVERSION "1.2.1"
 #define KEY_PREFIX "key "
-#define MODURL "https://github.com/ZarTek-Creole/znc-fish"
-#define MODAUTHOR "ZarTek-Creole"
+#define MODURL "https://github.com/fred0r/znc-fish"
+#define MODAUTHOR "fred0r"
 #define MODDESC "FiSH module with ECB/CBC, DH1080, topic encryption, marking"
 #define NICK_PREFIX_KEY "[nick-prefix]"
 
@@ -666,6 +666,8 @@ class CFishMod : public CModule {
                                     CString& out_result) {
         if (!(sMessage.Left(4) == "+OK " || sMessage.Left(5) == "mcps "))
             return false;
+        PutModule("WARNING: client already encrypted message to \"" + sTarget +
+                  "\" — turn off client FiSH plugin, ZNC module handles encryption");
         if (IsDisabled(sTarget)) return false;
         CString sRawKey = GetEncryptedNV("key " + sTarget.AsLower());
         if (sRawKey.empty()) return false;

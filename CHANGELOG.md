@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-05-22
+### Changed
+- Warn when the client sends a pre-encrypted (+OK/mcps) message, since
+  double encryption breaks interop with remote peers
+- Point Unreleased / 1.2.0 CHANGELOG links to the fred0r fork
+
 ## [1.2.0] - 2026-05-12
 ### Added
 - CBC/ECB Blowfish encryption with Mircryption-compatible CBC
@@ -79,6 +85,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial import (ECB/CBC basics)
 
-[Unreleased]: https://github.com/ZarTek-Creole/znc-fish/compare/v1.2.0...HEAD
-[1.2.0]: https://github.com/ZarTek-Creole/znc-fish/releases/tag/v1.2.0
+[Unreleased]: https://github.com/fred0r/znc-fish/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/fred0r/znc-fish/releases/tag/v1.2.1
+[1.2.0]: https://github.com/fred0r/znc-fish/releases/tag/v1.2.0
 [1.1.0]: https://github.com/ZarTek-Creole/znc-fish/releases/tag/v1.1.0
+[1.0.0]: https://github.com/ZarTek-Creole/znc-fish/releases/tag/v1.0.0
