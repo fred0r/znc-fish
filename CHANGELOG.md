@@ -79,6 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial import (ECB/CBC basics)
 
-[Unreleased]: https://github.com/ZarTek-Creole/znc-fish/compare/v1.2.0...HEAD
-[1.2.0]: https://github.com/ZarTek-Creole/znc-fish/releases/tag/v1.2.0
+[Unreleased]: https://github.com/fred0r/znc-fish/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/fred0r/znc-fish/releases/tag/v1.2.0
 [1.1.0]: https://github.com/ZarTek-Creole/znc-fish/releases/tag/v1.1.0
+[1.0.0]: https://github.com/ZarTek-Creole/znc-fish/releases/tag/v1.0.0
