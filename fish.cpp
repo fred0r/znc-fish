@@ -666,6 +666,8 @@ class CFishMod : public CModule {
                                     CString& out_result) {
         if (!(sMessage.Left(4) == "+OK " || sMessage.Left(5) == "mcps "))
             return false;
+        PutModule("WARNING: client already encrypted message to \"" + sTarget +
+                  "\" — turn off client FiSH plugin, ZNC module handles encryption");
         if (IsDisabled(sTarget)) return false;
         CString sRawKey = GetEncryptedNV("key " + sTarget.AsLower());
         if (sRawKey.empty()) return false;
